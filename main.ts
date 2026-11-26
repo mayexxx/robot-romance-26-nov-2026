@@ -1,18 +1,17 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-const text = "Are you a neural network? Because you've got me training all night just to get a little closer to your loss function.";
-const outputUrl = new URL("file:///output/", import.meta.url);
-const outputDirectory = fileURLToPath(outputUrl);
-const outputFile = fileURLToPath(new URL("entry.txt", outputUrl));
-const expected = Buffer.from(text + "\n", "utf8");
+const scriptPath = fileURLToPath(import.meta.url);
+if (!scriptPath) throw new Error("Unable to resolve script path");
 
-if ([...text].length < 1 || [...text].length > 199 || /[\r\n]/.test(text)) {
+const line = "Are you a neural network? Because you've got me training all night just to get a little closer to your loss function.";
+const characterCount = [...line].length;
+if (characterCount < 1 || characterCount > 199 || /[\r\n]/.test(line)) {
   throw new Error("Entry does not satisfy the text gate");
 }
 
-mkdirSync(outputDirectory, { recursive: true });
-writeFileSync(outputFile, expected);
-if (!readFileSync(outputFile).equals(expected)) {
-  throw new Error("Written entry does not match the expected text");
-}
+const expected = Buffer.from(`${line}\n`, "utf8");
+await mkdir("/output", { recursive: true });
+await writeFile("/output/entry.txt", expected);
+const actual = await readFile("/output/entry.txt");
+if (!actual.equals(expected)) throw new Error("Written entry does not match expected bytes");
